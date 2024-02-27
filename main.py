@@ -2,10 +2,13 @@ from flask import Flask, render_template, request, redirect, url_for
 import mysql.connector
 app = Flask(__name__)
 
-users = {
-    'user1': 'password1',
-    'user2': 'password2'
-}
+database = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="",
+    database="management"
+)
+
 
 # main page
 @app.route('/')
@@ -19,7 +22,11 @@ def login():
     username = request.form['username']
     password = request.form['password']
 
-    if username in users and users[username] == password:
+    cursor = database.cursor()
+    cursor.execute('SELECT * FROM accounts WHERE username = %s AND password = %s', (username, password))
+    account = cursor.fetchone()
+
+    if account:
         return redirect(url_for('main_page'))
     else:
         return redirect(url_for('wrong_password'))
@@ -28,14 +35,13 @@ def login():
 # wrong password
 @app.route('/')
 def wrong_password():
-    return render_template('index.html', message='Invalid username or password')
+    return 'Wrong password'
 
 
 # redirect sa main page kapag tama
 @app.route('/main_page')
 def main_page():
-    return  # render_template('forgot-password.html') return dapat sa main page kaso wala pa
-
+    return render_template('forgot-password.html')
 
 @app.route('/forgot-password')
 def forgot_password():
